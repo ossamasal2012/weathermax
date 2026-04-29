@@ -11,28 +11,29 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20 # نسخة مستقرة وحديثة
 
       - name: Install Dependencies
         run: |
           npm install @capacitor/core @capacitor/cli @capacitor/android
-          # إضافة إضافات الإنترنت والإشعارات
           npm install @capacitor/push-notifications @capacitor/network
-          mkdir www
+          mkdir -p www
+          # نسخ ملفك وتغيير اسمه ليكون الصفحة الرئيسية للتطبيق
           cp "الطقس ai.html" www/index.html
 
       - name: Initialize Capacitor
         run: |
-          npx cap init "Weather App" "com.ossama.weather" --web-dir www
+          # استخدام اسم الحزمة com.ossama.weather كما اتفقنا
+          npx cap init "OSSAMA Weather" "com.ossama.weather" --web-dir www
           npx cap add android
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
@@ -43,7 +44,7 @@ jobs:
           cd android && ./gradlew assembleDebug
 
       - name: Upload APK
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4 # تم التحديث إلى v4 لحل المشكلة
         with:
-          name: WeatherApp-Debug
+          name: OSSAMA-Weather-Debug
           path: android/app/build/outputs/apk/debug/app-debug.apk
