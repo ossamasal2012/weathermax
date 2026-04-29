@@ -24,7 +24,7 @@ jobs:
           npm install @capacitor/push-notifications @capacitor/network
           mkdir -p www
           # نسخ ملفك وتغيير اسمه ليكون الصفحة الرئيسية للتطبيق
-          cp "الطقس ai.html" www/index.html
+          cp "index.html" www/index.html
 
       - name: Initialize Capacitor
         run: |
