@@ -16,35 +16,37 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20 # نسخة مستقرة وحديثة
+          node-version: 20
 
       - name: Install Dependencies
         run: |
           npm install @capacitor/core @capacitor/cli @capacitor/android
           npm install @capacitor/push-notifications @capacitor/network
           mkdir -p www
-          # نسخ ملفك وتغيير اسمه ليكون الصفحة الرئيسية للتطبيق
-          cp "index.html" www/index.html
+          cp index.html www/index.html
 
       - name: Initialize Capacitor
         run: |
-          # استخدام اسم الحزمة com.ossama.weather كما اتفقنا
           npx cap init "OSSAMA Weather" "com.ossama.weather" --web-dir www
           npx cap add android
 
-      - name: Set up JDK 17
+      # تم تحديث Java إلى إصدار 21 لحل الخطأ المذكور في السجل
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
 
       - name: Build Android Project
         run: |
           npx cap sync
-          cd android && ./gradlew assembleDebug
+          cd android
+          # تأكد من منح صلاحية التنفيذ لملف gradlew
+          chmod +x gradlew
+          ./gradlew assembleDebug
 
       - name: Upload APK
-        uses: actions/upload-artifact@v4 # تم التحديث إلى v4 لحل المشكلة
+        uses: actions/upload-artifact@v4
         with:
-          name: OSSAMA-Weather-Debug
+          name: OSSAMA-Weather-V1
           path: android/app/build/outputs/apk/debug/app-debug.apk
