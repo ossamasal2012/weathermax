@@ -1335,6 +1335,41 @@ function init(){
   // Auto-refresh alerts every 30min
   setInterval(()=>{if(currentData)checkWeatherAlerts(currentData);},30*60*1000);
 }
+  // 1. طلب الإذن من المستخدم عند فتح التطبيق
+async function requestPermissions() {
+    const { PushNotifications } = capacitorExports; // استدعاء مكتبة كاباسيتور
+    let perm = await PushNotifications.checkPermissions();
+    
+    if (perm.receive !== 'granted') {
+        perm = await PushNotifications.requestPermissions();
+    }
+
+    if (perm.receive === 'granted') {
+        // 2. تسجيل الجهاز لدى خوادم جوجل للحصول على Token فريد
+        await PushNotifications.register();
+    }
+}
+
+// 3. الاستماع للأحداث (وصول إشعار)
+function setupPushListeners() {
+    const { PushNotifications } = capacitorExports;
+
+    // عند وصول إشعار والتطبيق مفتوح
+    PushNotifications.addListener('pushNotificationReceived', (notification) => {
+        console.log('وصل إشعار جديد: ', notification);
+    });
+
+    // عند ضغط المستخدم على الإشعار وهو خارج التطبيق
+    PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
+        console.log('المستخدم ضغط على الإشعار');
+    });
+}
+
+// استدعاء الوظائف عند بدء تشغيل التطبيق
+window.onload = () => {
+    requestPermissions();
+    setupPushListeners();
+}
 init();
 </script>
 </body>
