@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "868473695713",
+    "project_id": "weatherapp-11ccb",
+    "storage_bucket": "weatherapp-11ccb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:868473695713:android:4d67ce4e00e58cf07636a0",
+        "android_client_info": {
+          "package_name": "com.ossama.weather"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCX2Sw4CLLN-bgyo81G9TYcxFoojEZPw3w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
