@@ -629,22 +629,16 @@ function skipNotif(){
 
 async function registerSW(){
   if('serviceWorker' in navigator){
-    try {
-      // Inline SW for notifications
-      const swCode = `
-self.addEventListener('push', function(event) {
-  const data = event.data ? event.data.json() : {};
-  self.registration.showNotification(data.title || 'تحذير طقس', {
-    body: data.body || '',
-    icon: data.icon || '⚠️',
-    badge: '/favicon.ico',
-    vibrate: [200,100,200],
-    requireInteraction: true,
-    tag: data.tag || 'wx-alert',
-    dir: 'rtl',
-    lang: 'ar'
-  });
-});
+try {
+    // كود تشغيل Puter.js الخاص بك هنا
+    puter.ai.chat("أعطني حالة الطقس في بابل").then(res => {
+        document.getElementById('weather-info').innerHTML = res;
+    }).catch(err => {
+        alert("خطأ في جلب البيانات: " + err);
+    });
+} catch (e) {
+    document.body.innerHTML += "<div style='color:white'>حدث خطأ في النظام: " + e.message + "</div>";
+}
 self.addEventListener('notificationclick', function(event) {
   event.notification.close();
   event.waitUntil(clients.openWindow('/'));
