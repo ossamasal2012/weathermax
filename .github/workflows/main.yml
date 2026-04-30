@@ -26,49 +26,50 @@ jobs:
           mkdir -p www
           cp index.html www/index.html
 
-      - name: Download Icon
-        run: |
-          mkdir -p assets
-          curl -L "https://i.ibb.co/5hX004bW/Chat-GPT-Image-29-2026-05-26-13.png" -o assets/icon.png
-          cp assets/icon.png assets/splash.png
-
       - name: Initialize Capacitor
         run: |
           npx cap init "OSSAMA Weather" "com.ossama.weather" --web-dir www
           npx cap add android
 
-      - name: Move Firebase Config
+      - name: Handle Assets and Config
         run: |
+          mkdir -p assets
+          curl -L "https://i.ibb.co/5hX004bW/Chat-GPT-Image-29-2026-05-26-13.png" -o assets/icon.png
+          cp assets/icon.png assets/splash.png
           if [ -f "google-services.json" ]; then
             mv google-services.json android/app/google-services.json
           fi
 
-      # --- تعديلات جوهرية لحل مشكلة الشاشة الفارغة وعدم ظهور البيانات ---
-      - name: Fix Android Security & Permissions
+      # --- إصلاح ملف MainActivity.java جذرياً ---
+      - name: Reconstruct MainActivity.java
+        run: |
+          PACKAGE_DIR="android/app/src/main/java/com/ossama/weather"
+          mkdir -p $PACKAGE_DIR
+          echo "package com.ossama.weather;
+
+          import android.os.Bundle;
+          import com.getcapacitor.BridgeActivity;
+
+          public class MainActivity extends BridgeActivity {
+              @Override
+              public void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+              }
+          }" > $PACKAGE_DIR/MainActivity.java
+
+      # --- إصلاح أذونات الإنترنت وسياسة الشبكة ---
+      - name: Configure Android Permissions
         run: |
           MANIFEST_PATH="android/app/src/main/AndroidManifest.xml"
-          
-          # 1. إضافة كل الأذونات اللازمة للإنترنت والإشعارات
+          # إزالة أي تكرار لأذونات الإنترنت ثم إضافتها بشكل نظيف
+          sed -i '/android.permission.INTERNET/d' $MANIFEST_PATH
           sed -i '/<application/i \    <uses-permission android:name="android.permission.INTERNET" />' $MANIFEST_PATH
-          sed -i '/<application/i \    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />' $MANIFEST_PATH
-          sed -i '/<application/i \    <uses-permission android:name="android.permission.WAKE_LOCK" />' $MANIFEST_PATH
-          
-          # 2. السماح بمرور البيانات (Cleartext) وتعريف سياسة الشبكة
           sed -i 's/<application/<application android:usesCleartextTraffic="true"/' $MANIFEST_PATH
           
-          # 3. إنشاء ملف Network Security Config للسماح لجلب البيانات من Open-Meteo
+          # إنشاء ملف سياسة الشبكة
           mkdir -p android/app/src/main/res/xml
-          echo '<?xml version="1.0" encoding="utf-8"?><network-security-config><base-config cleartextTrafficPermitted="true"><trust-anchors><certificates src="system" /><certificates src="user" /></trust-anchors></base-config></network-security-config>' > android/app/src/main/res/xml/network_security_config.xml
+          echo '<?xml version="1.0" encoding="utf-8"?><network-security-config><base-config cleartextTrafficPermitted="true" /></network-security-config>' > android/app/src/main/res/xml/network_security_config.xml
           sed -i 's/<application/<application android:networkSecurityConfig="@xml\/network_security_config"/' $MANIFEST_PATH
-
-      # --- حقن كود تجاوز أمان WebView داخل MainActivity.java ---
-      - name: Bypass WebView Security Constraints
-        run: |
-          JAVA_PATH="android/app/src/main/java/com/ossama/weather/MainActivity.java"
-          # إضافة المكتبات اللازمة
-          sed -i '/package com.ossama.weather;/a import android.os.Bundle;\nimport android.webkit.WebSettings;' $JAVA_PATH
-          # تفعيل إعدادات السماح بـ Cross-Origin داخل الكود البرمجي
-          sed -i '/public class MainActivity extends BridgeActivity {/a \  @Override\n  public void onCreate(Bundle savedInstanceState) {\n    super.onCreate(savedInstanceState);\n  }' $JAVA_PATH
 
       - name: Generate Assets
         run: npx capacitor-assets generate --android
@@ -87,5 +88,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: OSSAMA-Weather-Ultimate-V2
+          name: OSSAMA-Weather-Fixed
           path: android/app/build/outputs/apk/debug/app-debug.apk
