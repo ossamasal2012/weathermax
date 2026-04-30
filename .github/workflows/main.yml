@@ -1,4 +1,4 @@
-name: Build Android APK with Icon & Internet
+name: Build Android APK Final Fix
 
 on:
   push:
@@ -37,14 +37,27 @@ jobs:
           npx cap init "OSSAMA Weather" "com.ossama.weather" --web-dir www
           npx cap add android
 
-      # خطوة هامة: تفعيل تراخيص الإنترنت في ملف Manifest
-      - name: Enable Internet Permissions
+      # --- خطوة نقل ملف Google Services إلى مكانه الصحيح ---
+      - name: Move Firebase Config
+        run: |
+          if [ -f "google-services.json" ]; then
+            mv google-services.json android/app/google-services.json
+            echo "تم العثور على ملف Firebase ونقله بنجاح"
+          else
+            echo "تحذير: ملف google-services.json غير موجود في المجلد الرئيسي!"
+          fi
+
+      # --- تعديلات أمن الشبكة والإنترنت ---
+      - name: Force Enable Internet & Network Policy
         run: |
           MANIFEST_PATH="android/app/src/main/AndroidManifest.xml"
           sed -i '/<application/i \    <uses-permission android:name="android.permission.INTERNET" />' $MANIFEST_PATH
           sed -i '/<application/i \    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />' $MANIFEST_PATH
-          # تفعيل دعم الروابط غير المشفرة http (اختياري ولكن مفيد)
           sed -i 's/<application/<application android:usesCleartextTraffic="true"/' $MANIFEST_PATH
+          NET_CONFIG_PATH="android/app/src/main/res/xml/network_security_config.xml"
+          mkdir -p android/app/src/main/res/xml
+          echo '<?xml version="1.0" encoding="utf-8"?><network-security-config><base-config cleartextTrafficPermitted="true"><trust-anchors><certificates src="system" /><certificates src="user" /></trust-anchors></base-config></network-security-config>' > $NET_CONFIG_PATH
+          sed -i 's/<application/<application android:networkSecurityConfig="@xml\/network_security_config"/' $MANIFEST_PATH
 
       - name: Generate Assets
         run: npx capacitor-assets generate --android
@@ -63,5 +76,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: OSSAMA-Weather-Internet-Fix
+          name: OSSAMA-Weather-Final-Fix
           path: android/app/build/outputs/apk/debug/app-debug.apk
